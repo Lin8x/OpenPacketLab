@@ -33,7 +33,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           du -ah dist | sort -h | tail -n 10 >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: web-dist
           path: dist
