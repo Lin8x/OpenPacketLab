@@ -1,0 +1,26 @@
+# Snap (repackages the official .deb). Build with: snapcraft --destructive-mode
+name: openpacketlab
+base: core22
+version: "{{VERSION}}"
+summary: Open-source network simulator and teaching lab
+description: |
+  Build networks of routers, switches and hosts, configure them with an
+  IOS-style command line, and watch every packet in simulation mode.
+  No account required.
+grade: stable
+confinement: strict
+license: Apache-2.0
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+apps:
+  openpacketlab:
+    command: usr/bin/openpacketlab
+    extensions: [gnome]
+    plugs: [home, network, removable-media]
+parts:
+  openpacketlab:
+    plugin: dump
+    source: https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_$CRAFT_ARCH_BUILD_FOR.deb
+    source-type: deb
+    prime: [usr/bin/openpacketlab, usr/share]

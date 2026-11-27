@@ -8,3 +8,4 @@ src-tauri/gen/
 !.vscode/extensions.json
 release-artifacts/
 coverage/
+packaging/dist/

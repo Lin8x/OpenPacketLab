@@ -1,0 +1,19 @@
+# Maintainer: OpenPacketLab contributors
+pkgname=openpacketlab-bin
+pkgver={{VERSION}}
+pkgrel=1
+pkgdesc="Open-source network simulator and teaching lab. No account required."
+arch=('x86_64' 'aarch64')
+url="https://github.com/Lin8x/OpenPacketLab"
+license=('Apache-2.0')
+depends=('webkit2gtk-4.1' 'gtk3')
+provides=('openpacketlab')
+conflicts=('openpacketlab')
+source_x86_64=("https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_amd64.deb")
+source_aarch64=("https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_arm64.deb")
+sha256sums_x86_64=('{{SHA256:OpenPacketLab_{{VERSION}}_amd64.deb}}')
+sha256sums_aarch64=('{{SHA256:OpenPacketLab_{{VERSION}}_arm64.deb}}')
+
+package() {
+  bsdtar -xf data.tar.gz -C "$pkgdir" 2>/dev/null || bsdtar -xf data.tar.* -C "$pkgdir"
+}

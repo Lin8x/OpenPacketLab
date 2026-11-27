@@ -1,0 +1,23 @@
+{
+  "version": "{{VERSION}}",
+  "description": "Open-source network simulator and teaching lab. No account required.",
+  "homepage": "https://github.com/Lin8x/OpenPacketLab",
+  "license": "Apache-2.0",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_x64_en-US.msi",
+      "hash": "{{SHA256:OpenPacketLab_{{VERSION}}_x64_en-US.msi}}"
+    }
+  },
+  "extract_dir": "PFiles\\OpenPacketLab",
+  "bin": "openpacketlab.exe",
+  "shortcuts": [["openpacketlab.exe", "OpenPacketLab"]],
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/Lin8x/OpenPacketLab/releases/download/v$version/OpenPacketLab_$version_x64_en-US.msi"
+      }
+    }
+  }
+}

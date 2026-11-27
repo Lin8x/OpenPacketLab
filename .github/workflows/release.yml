@@ -1,0 +1,275 @@
+name: Release
+
+# Push a tag like v1.2.3 (or run `npm run opl -- release 1.2.3`) to build and publish everything.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build, e.g. v0.2.0"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.release.outputs.id }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - id: version
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+      - name: Release notes from CHANGELOG.md
+        run: node scripts/opl.mjs notes "${TAG#v}" > notes.md
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --draft --notes-file notes.md
+          else
+            gh release create "$TAG" --draft --title "OpenPacketLab $TAG" --notes-file notes.md
+          fi
+          echo "id=$(gh release view "$TAG" --json databaseId -q .databaseId)" >> "$GITHUB_OUTPUT"
+
+  desktop:
+    needs: create-release
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple silicon + Intel, universal)
+            os: macos-latest
+            args: --target universal-apple-darwin
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - name: Linux x86_64 (deb, rpm, AppImage)
+            os: ubuntu-22.04
+            args: ""
+          - name: Linux arm64 (deb, rpm, AppImage)
+            os: ubuntu-22.04-arm
+            args: ""
+          - name: Windows x64 (msi, exe)
+            os: windows-latest
+            args: ""
+          - name: Windows arm64 (exe)
+            os: windows-latest
+            args: --target aarch64-pc-windows-msvc --bundles nsis
+            rust-targets: aarch64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm test
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Optional code signing. Leave the secrets unset for unsigned (ad-hoc on macOS) builds.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.id }}
+          args: ${{ matrix.args }}
+
+  web:
+    needs: create-release
+    name: Web build (self-hosting zip)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci && npm run build
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${TAG#v}"
+          (cd dist && zip -qr "../OpenPacketLab_${V}_web.zip" .)
+          gh release upload "$TAG" "OpenPacketLab_${V}_web.zip" --clobber
+
+  docker:
+    needs: create-release
+    name: Container image (ghcr.io)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/openpacketlab
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/386,linux/ppc64le,linux/s390x
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish:
+    needs: [create-release, desktop, web, docker]
+    name: Publish release and package manifests
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.create-release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Download release assets
+        run: gh release download "$TAG" --dir assets --pattern '*'
+      - name: Checksums
+        run: |
+          (cd assets && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          gh release upload "$TAG" assets/SHA256SUMS.txt --clobber
+      - name: Render package manifests
+        run: node scripts/opl.mjs manifests "$VERSION" --assets assets
+      - name: Publish the release
+        run: gh release edit "$TAG" --draft=false --latest
+      - name: Commit updated manifests to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packaging
+          git diff --cached --quiet || (git commit -m "Update package manifests for v$VERSION" && git push origin HEAD:main)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-manifests
+          path: packaging/dist
+
+  homebrew:
+    needs: publish
+    name: Homebrew tap
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-manifests
+          path: manifests
+      - name: Push cask to Lin8x/homebrew-tap
+        if: env.HOMEBREW_TAP_TOKEN != ''
+        run: |
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/Lin8x/homebrew-tap.git" tap
+          mkdir -p tap/Casks
+          cp manifests/homebrew/openpacketlab.rb tap/Casks/openpacketlab.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/openpacketlab.rb
+          git diff --cached --quiet || (git commit -m "openpacketlab ${TAG#v}" && git push)
+      - name: Skipped
+        if: env.HOMEBREW_TAP_TOKEN == ''
+        run: echo "::notice::Set the HOMEBREW_TAP_TOKEN secret to update the Homebrew tap automatically."
+
+  aur:
+    needs: publish
+    name: AUR (openpacketlab-bin)
+    runs-on: ubuntu-latest
+    env:
+      AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-manifests
+          path: manifests
+      - if: env.AUR_SSH_KEY != ''
+        uses: KSXGitHub/github-actions-deploy-aur@v3
+        with:
+          pkgname: openpacketlab-bin
+          pkgbuild: manifests/aur/PKGBUILD
+          commit_username: github-actions[bot]
+          commit_email: 41898282+github-actions[bot]@users.noreply.github.com
+          ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
+          commit_message: Update to ${{ env.TAG }}
+      - if: env.AUR_SSH_KEY == ''
+        run: echo "::notice::Set the AUR_SSH_KEY secret to publish openpacketlab-bin to the AUR."
+
+  winget:
+    needs: publish
+    name: winget
+    runs-on: windows-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: Lin8x.OpenPacketLab
+          installers-regex: '_x64_en-US\.msi$|_arm64-setup\.exe$'
+          release-tag: ${{ env.TAG }}
+          token: ${{ secrets.WINGET_TOKEN }}
+      - if: env.WINGET_TOKEN == ''
+        run: echo "::notice::Set the WINGET_TOKEN secret to submit releases to winget-pkgs."
+
+  chocolatey:
+    needs: publish
+    name: Chocolatey
+    runs-on: windows-latest
+    env:
+      CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-manifests
+          path: manifests
+      - if: env.CHOCO_API_KEY != ''
+        shell: pwsh
+        run: |
+          cd manifests/chocolatey
+          choco pack
+          choco push (Get-ChildItem *.nupkg).FullName --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
+      - if: env.CHOCO_API_KEY == ''
+        run: echo "::notice::Set the CHOCO_API_KEY secret to publish to Chocolatey."

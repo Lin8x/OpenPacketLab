@@ -1,0 +1,34 @@
+# Flatpak manifest (repackages the official .deb). Build with:
+#   flatpak-builder --user --install build packaging/dist/flatpak/io.github.lin8x.openpacketlab.yml
+app-id: io.github.lin8x.openpacketlab
+runtime: org.gnome.Platform
+runtime-version: "47"
+sdk: org.gnome.Sdk
+command: openpacketlab
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  - --filesystem=home
+modules:
+  - name: openpacketlab
+    buildsystem: simple
+    sources:
+      - type: file
+        dest-filename: openpacketlab.deb
+        only-arches: [x86_64]
+        url: https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_amd64.deb
+        sha256: {{SHA256:OpenPacketLab_{{VERSION}}_amd64.deb}}
+      - type: file
+        dest-filename: openpacketlab.deb
+        only-arches: [aarch64]
+        url: https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_arm64.deb
+        sha256: {{SHA256:OpenPacketLab_{{VERSION}}_arm64.deb}}
+    build-commands:
+      - ar -x openpacketlab.deb
+      - tar -xf data.tar.gz
+      - install -Dm755 usr/bin/openpacketlab /app/bin/openpacketlab
+      - install -Dm644 usr/share/applications/OpenPacketLab.desktop /app/share/applications/io.github.lin8x.openpacketlab.desktop
+      - desktop-file-edit --set-icon=io.github.lin8x.openpacketlab /app/share/applications/io.github.lin8x.openpacketlab.desktop
+      - install -Dm644 usr/share/icons/hicolor/128x128/apps/openpacketlab.png /app/share/icons/hicolor/128x128/apps/io.github.lin8x.openpacketlab.png

@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
+# Reference manifest. Releases are submitted to winget-pkgs by the release workflow (WINGET_TOKEN).
+PackageIdentifier: Lin8x.OpenPacketLab
+PackageVersion: {{VERSION}}
+PackageLocale: en-US
+Publisher: OpenPacketLab
+PackageName: OpenPacketLab
+License: Apache-2.0
+LicenseUrl: https://github.com/Lin8x/OpenPacketLab/blob/main/LICENSE
+PackageUrl: https://github.com/Lin8x/OpenPacketLab
+ShortDescription: Open-source network simulator and teaching lab. No account required.
+Tags: [network, simulator, education, networking]
+Installers:
+  - Architecture: x64
+    InstallerType: wix
+    InstallerUrl: https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_x64_en-US.msi
+    InstallerSha256: {{SHA256:OpenPacketLab_{{VERSION}}_x64_en-US.msi}}
+  - Architecture: arm64
+    InstallerType: nullsoft
+    InstallerUrl: https://github.com/Lin8x/OpenPacketLab/releases/download/v{{VERSION}}/OpenPacketLab_{{VERSION}}_arm64-setup.exe
+    InstallerSha256: {{SHA256:OpenPacketLab_{{VERSION}}_arm64-setup.exe}}
+ManifestType: singleton
+ManifestVersion: 1.6.0

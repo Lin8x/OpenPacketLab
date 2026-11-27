@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>openpacketlab</id>
+    <version>{{VERSION}}</version>
+    <title>OpenPacketLab</title>
+    <authors>OpenPacketLab contributors</authors>
+    <projectUrl>https://github.com/Lin8x/OpenPacketLab</projectUrl>
+    <licenseUrl>https://github.com/Lin8x/OpenPacketLab/blob/main/LICENSE</licenseUrl>
+    <projectSourceUrl>https://github.com/Lin8x/OpenPacketLab</projectSourceUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>network simulator networking education ccna lab</tags>
+    <summary>Open-source network simulator and teaching lab.</summary>
+    <description>Build networks of routers, switches and hosts, configure them with an IOS-style command line, and watch every packet in simulation mode. No account required.</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
