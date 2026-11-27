@@ -1,0 +1,38 @@
+{
+  "name": "openpacketlab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open-source network simulator and teaching lab. No account required.",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/Lin8x/OpenPacketLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lin8x/OpenPacketLab.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "tauri": "tauri",
+    "app:dev": "tauri dev",
+    "app:build": "tauri build",
+    "opl": "node scripts/opl.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.2",
+    "@tauri-apps/cli": "^2.12.6",
+    "@tsconfig/svelte": "^5.0.9",
+    "svelte": "^5.59.2",
+    "svelte-check": "^4.7.8",
+    "typescript": "~5.9",
+    "vite": "^8.4.0",
+    "vitest": "^5.1.2"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.5"
+  }
+}
