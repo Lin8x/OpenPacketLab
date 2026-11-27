@@ -17,3 +17,5 @@ All notable changes to OpenPacketLab are listed here. The format follows
 - Desktop app for macOS, Windows and Linux (Tauri 2) with `.opl` file association.
 - Docker image and Portainer stack.
 - Release workflow, package manifests and the `opl` dev tool.
+- Backup destinations with independent schedules: folders and drives, SMB/NFS shares, S3 and compatible storage, Google Drive, OneDrive, Dropbox, WebDAV, SFTP, FTP/FTPS, HTTP endpoints and rclone. Retention per lab, skip when unchanged, catch-up of missed runs and a run history.
+- New app icon.

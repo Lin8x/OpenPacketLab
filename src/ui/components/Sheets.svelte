@@ -6,9 +6,12 @@
   import { newProject, openProject, loadSample, openRecent } from "../actions";
   import { isTauri, mod, exportText, basename } from "../platform";
   import Icon from "./Icon.svelte";
+  import BackupDestinations from "./BackupDestinations.svelte";
 
   const VERSION = __APP_VERSION__;
   let list = $state<BackupMeta[]>([]);
+  let backupTab = $state<"local" | "destinations">("local");
+  let destView = $state<"list" | "add" | "edit">("list");
   let lastSession = $state<BackupMeta | null>(null);
 
   $effect(() => {
@@ -67,11 +70,11 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="scrim" onclick={(e) => e.target === e.currentTarget && app.sheet !== "welcome" && (app.sheet = null)}>
-    <div class="sheet" class:wide={app.sheet === "welcome"} role="dialog" aria-modal="true">
+    <div class="sheet" class:wide={app.sheet === "welcome"} class:medium={app.sheet === "backups" && backupTab === "destinations"} role="dialog" aria-modal="true">
       {#if app.sheet === "welcome"}
         <div class="welcome">
           <div class="hero">
-            <div class="logo"><Icon name="network" size={34} stroke={1.6} /></div>
+            <img class="logo-img" src="./icon.svg" alt="" width="84" height="84" />
             <h1>OpenPacketLab</h1>
             <p class="muted">Design, configure and watch networks come alive. Free and open source. No account needed.</p>
             <div class="cta">
@@ -109,8 +112,18 @@
           </div>
         </div>
       {:else if app.sheet === "backups"}
-        <h2>Backups & versions</h2>
-        <p class="muted">OpenPacketLab saves your work on this device every {prefs.autosaveSeconds} seconds while you edit, and keeps the last {prefs.backupCount} autosaves per lab plus every version you save. Nothing is uploaded.</p>
+        <div class="bhead">
+          <h2>Backups</h2>
+          <div class="segmented">
+            <button class:on={backupTab === "local"} onclick={() => (backupTab = "local")}>On This Device</button>
+            <button class:on={backupTab === "destinations"} onclick={() => (backupTab = "destinations")}>Destinations</button>
+          </div>
+        </div>
+        {#if backupTab === "destinations"}
+          <BackupDestinations bind:view={destView} />
+          {#if destView !== "edit"}<div class="foot"><span style="flex:1"></span><button class="btn primary" onclick={() => (app.sheet = null)}>Done</button></div>{/if}
+        {:else}
+        <p class="muted">OpenPacketLab saves your work on this device every {prefs.autosaveSeconds} seconds while you edit, and keeps the last {prefs.backupCount} autosaves per lab plus every version you save. To also send copies to a drive, a server or cloud storage, add a destination.</p>
         <div class="blist scroll">
           {#each list as b}
             <div class="brow">
@@ -132,6 +145,7 @@
           <span style="flex:1"></span>
           <button class="btn primary" onclick={() => (app.sheet = null)}>Done</button>
         </div>
+        {/if}
       {:else if app.sheet === "prefs"}
         <h2>Settings</h2>
         <div class="section-title">Appearance</div>
@@ -177,7 +191,7 @@
         <div class="foot"><span style="flex:1"></span><button class="btn primary" onclick={() => (app.sheet = null)}>Done</button></div>
       {:else if app.sheet === "about"}
         <div class="about">
-          <div class="logo"><Icon name="network" size={34} stroke={1.6} /></div>
+          <img class="logo-img" src="./icon.svg" alt="" width="84" height="84" />
           <h2>OpenPacketLab</h2>
           <p class="muted">Version {VERSION}</p>
           <p>A free, open-source network simulator for learning and teaching. Licensed under the Apache License 2.0.</p>
@@ -205,6 +219,24 @@
     from {
       opacity: 0;
     }
+  }
+  .logo-img {
+    display: block;
+    margin: 0 auto 6px;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.15));
+  }
+  .bhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .bhead h2 {
+    margin: 0;
+  }
+  .sheet.medium {
+    width: min(720px, 96vw);
   }
   .sheet {
     width: min(560px, 94vw);

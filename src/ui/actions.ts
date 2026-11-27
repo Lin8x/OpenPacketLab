@@ -2,6 +2,7 @@
 
 import { app } from "./state.svelte";
 import { prefs, savePrefs } from "./prefs.svelte";
+import { backupManager } from "../backup/manager.svelte";
 import { openProjectFile, saveProjectFile, readPath, isTauri, basename, download, exportText } from "./platform";
 import { SAMPLES } from "./samples";
 import { runningConfig } from "../engine/cli/show";
@@ -74,6 +75,7 @@ export async function saveProject(saveAs = false) {
     }
     app.dirty = false;
     await app.backupNow("Saved");
+    void backupManager.onSaved();
     app.toast(res ? `Saved ${basename(res)}` : "Project downloaded", "success");
   } catch (e) {
     app.toast(`Could not save. ${(e as Error).message}`, "error");

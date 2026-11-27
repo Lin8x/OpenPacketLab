@@ -1,0 +1,1 @@
+{"identities":[{"name":"opl","credentials":[{"accessKey":"opltest","secretKey":"opltest123"}],"actions":["Admin","Read","Write","List","Tagging"]}]}

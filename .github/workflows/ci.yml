@@ -64,8 +64,32 @@ jobs:
         run: mkdir -p dist && echo '<!doctype html><title>OpenPacketLab</title>' > dist/index.html
       - run: cargo fmt --check
         working-directory: src-tauri
-      - run: cargo clippy --locked -- -D warnings
+      - run: cargo clippy --locked --all-targets -- -D warnings
         working-directory: src-tauri
+      - run: cargo test --locked
+        working-directory: src-tauri
+
+  backup-destinations:
+    name: Backup destinations (S3, WebDAV, SFTP, FTP)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - name: Placeholder frontend
+        run: mkdir -p dist && echo '<!doctype html><title>OpenPacketLab</title>' > dist/index.html
+      - run: node scripts/opl.mjs it
 
   docker:
     name: Docker image

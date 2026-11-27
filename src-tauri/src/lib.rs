@@ -1,3 +1,5 @@
+mod backup;
+
 use std::sync::Mutex;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use tauri::{Emitter, Manager};
@@ -23,8 +25,31 @@ pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(StartupFile(Mutex::new(project_arg(std::env::args()))))
-        .invoke_handler(tauri::generate_handler![startup_file]);
+        .invoke_handler(tauri::generate_handler![
+            startup_file,
+            backup::secrets_load,
+            backup::secrets_save,
+            backup::backup_folder_write,
+            backup::backup_folder_list,
+            backup::backup_folder_remove,
+            backup::backup_sftp_test,
+            backup::backup_sftp_put,
+            backup::backup_sftp_list,
+            backup::backup_sftp_remove,
+            backup::backup_ftp_test,
+            backup::backup_ftp_put,
+            backup::backup_ftp_list,
+            backup::backup_ftp_remove,
+            backup::backup_rclone_put,
+            backup::backup_rclone_list,
+            backup::backup_rclone_remove,
+            backup::backup_rclone_test,
+            backup::oauth_listen,
+            backup::oauth_wait,
+        ]);
 
     let app = builder
         .build(tauri::generate_context!())

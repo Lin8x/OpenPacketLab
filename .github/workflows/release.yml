@@ -16,6 +16,11 @@ permissions:
 
 env:
   TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  # Optional OAuth apps for one-click cloud backup sign-in (repository variables).
+  VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+  VITE_GOOGLE_CLIENT_SECRET: ${{ vars.GOOGLE_CLIENT_SECRET }}
+  VITE_ONEDRIVE_CLIENT_ID: ${{ vars.ONEDRIVE_CLIENT_ID }}
+  VITE_DROPBOX_CLIENT_ID: ${{ vars.DROPBOX_CLIENT_ID }}
 
 jobs:
   create-release:

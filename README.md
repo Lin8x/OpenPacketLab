@@ -56,6 +56,7 @@ build, which you can host yourself with Docker or Portainer.
 - A clean interface that follows Apple's Human Interface Guidelines: light and dark mode, SF-style typography, sheets, segmented controls and the command palette (`⌘K` / `Ctrl+K`)
 - Every settings change shows the equivalent IOS commands, so the GUI teaches the CLI
 - Automatic local backups with restore, undo and redo, recent files, duplicate and multi-select
+- Backups to as many destinations as you like, each on its own schedule (every few minutes, daily, weekly on chosen days, on save, or manual) with per-lab retention, skip-if-unchanged, catch-up after the app was closed, and a history of every run. Destinations: a local folder or drive, network shares (SMB/NFS), Amazon S3 and compatible storage (R2, B2, Wasabi, MinIO), Google Drive, OneDrive, Dropbox, WebDAV (Nextcloud, ownCloud, Box), SFTP, FTP/FTPS, any HTTP endpoint, and any of rclone's 70+ backends
 - Sample labs to start from: two LANs, VLANs, services, OSPF, NAT, spanning tree
 - Open file format (`.opl`, JSON), configuration export, and no telemetry
 
@@ -124,6 +125,7 @@ npm run app:dev         # desktop app with hot reload
 | `doctor` | Checks Node, Rust, Docker, WebKitGTK and the GitHub CLI |
 | `check` | Type check, tests, web build, `cargo fmt` and `clippy` (`--fast` for just types and tests) |
 | `test [pattern]` | Runs the engine and CLI tests |
+| `it` | Starts S3, WebDAV, SFTP and FTP servers in Docker and tests every backup destination against them |
 | `size` | Reports the web bundle size |
 | `bundle` | Builds desktop installers for your machine |
 | `docker run` / `docker stop` | Builds and runs the container on port 8080 |
@@ -150,11 +152,22 @@ Optional repository secrets turn on more channels:
 | `CHOCO_API_KEY` | Publishing to Chocolatey |
 | `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` | macOS signing and notarization |
 
+### Cloud sign-in (Google Drive, OneDrive, Dropbox)
+
+These services need an OAuth app. Register one with each provider and either build with
+`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_CLIENT_SECRET`, `VITE_ONEDRIVE_CLIENT_ID` and
+`VITE_DROPBOX_CLIENT_ID` set (for example as repository variables in the release workflow), or
+let users paste their own client ID under *Advanced* in the destination. The desktop app
+signs in through the system browser with the redirect `http://localhost:53682/`; the web build
+uses `<your site>/oauth.html`. Credentials are stored in a file only your user can read (desktop)
+or in the browser's local storage (web).
+
 ### Project layout
 
 ```
 src/engine/        simulator: scheduler, frames, devices, protocols, project format
 src/engine/cli/    IOS-style command parser, commands, show output, PC prompt
+src/backup/        backup destinations, schedules and the scheduler
 src/ui/            Svelte interface (canvas, inspector, device windows, sheets)
 src-tauri/         desktop shell (Rust, Tauri 2)
 tests/             engine and CLI tests (Vitest)

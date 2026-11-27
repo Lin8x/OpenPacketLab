@@ -1,1 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b8cff"/><stop offset="1" stop-color="#6b3fe0"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="112" fill="url(#g)"/><g fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><path d="M256 120v86M150 330v-56h212v56"/><rect x="206" y="104" width="100" height="80" rx="18"/><rect x="100" y="330" width="100" height="80" rx="18"/><rect x="312" y="330" width="100" height="80" rx="18"/></g><circle cx="256" cy="274" r="18" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#3D8BFF"/>
+      <stop offset="0.55" stop-color="#2F5BE7"/>
+      <stop offset="1" stop-color="#5B2BD6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#8FE3FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#8FE3FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="node" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.6" stop-color="#E8F0FF"/>
+      <stop offset="1" stop-color="#B9CCF5"/>
+    </radialGradient>
+    <radialGradient id="core" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#DDF6FF"/>
+      <stop offset="1" stop-color="#8ED4F7"/>
+    </radialGradient>
+    <linearGradient id="packet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8A1F"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0B1A5C" flood-opacity="0.35"/>
+    </filter>
+    <filter id="iconShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+    <filter id="packetGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="squircle">
+      <path d="M512 100c215 0 300 0 356 56s56 141 56 356 0 300-56 356-141 56-356 56-300 0-356-56-56-141-56-356 0-300 56-356 141-56 356-56z"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#iconShadow)">
+    <g clip-path="url(#squircle)">
+      <rect x="100" y="100" width="824" height="824" fill="url(#bg)"/>
+      <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
+      <!-- faint grid, like a lab bench -->
+      <g stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="3">
+        <path d="M100 260h824M100 420h824M100 580h824M100 740h824M260 100v824M420 100v824M580 100v824M740 100v824"/>
+      </g>
+      <rect x="100" y="100" width="824" height="420" fill="url(#sheen)"/>
+    </g>
+  </g>
+
+  <!-- links -->
+  <g stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-opacity="0.92" filter="url(#shadow)">
+    <path d="M512 520L512 298"/>
+    <path d="M512 520L310 640"/>
+    <path d="M512 520L714 640"/>
+    <path d="M512 298L310 640" stroke-opacity="0.38" stroke-width="14"/>
+    <path d="M512 298L714 640" stroke-opacity="0.38" stroke-width="14"/>
+    <path d="M310 640L714 640" stroke-opacity="0.38" stroke-width="14"/>
+  </g>
+
+  <!-- outer nodes -->
+  <g filter="url(#shadow)">
+    <circle cx="512" cy="290" r="74" fill="url(#node)"/>
+    <circle cx="300" cy="650" r="74" fill="url(#node)"/>
+    <circle cx="724" cy="650" r="74" fill="url(#node)"/>
+  </g>
+  <!-- node faces: router, switch, host glyphs -->
+  <g fill="none" stroke="#2F5BE7" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M482 290h60M512 260v60M490 268l44 44M534 268l-44 44" stroke-width="11"/>
+    <path d="M272 636h52l-14-14M328 664h-52l14 14"/>
+    <rect x="694" y="626" width="60" height="40" rx="7"/>
+    <path d="M712 684h24"/>
+  </g>
+
+  <!-- core node -->
+  <g filter="url(#shadow)">
+    <circle cx="512" cy="520" r="104" fill="url(#core)"/>
+  </g>
+  <circle cx="512" cy="520" r="62" fill="none" stroke="#2F5BE7" stroke-width="14"/>
+  <circle cx="512" cy="520" r="22" fill="#2F5BE7"/>
+
+  <!-- packet in flight -->
+  <g filter="url(#packetGlow)" transform="rotate(-31 611 580)">
+    <rect x="575" y="553" width="72" height="54" rx="12" fill="url(#packet)"/>
+    <path d="M584 566l27 20 27-20" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

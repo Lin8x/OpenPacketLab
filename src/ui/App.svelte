@@ -4,6 +4,7 @@
   import { prefs } from "./prefs.svelte";
   import { backups } from "./storage";
   import { onDesktopOpenFile } from "./platform";
+  import { backupManager } from "../backup/manager.svelte";
   import { actions, deleteSelection, duplicateSelection, saveProject, openProject, openRecent, newProject, selectAll, zoom, zoomToFit } from "./actions";
   import Toolbar from "./components/Toolbar.svelte";
   import Library from "./components/Library.svelte";
@@ -57,10 +58,35 @@
     };
     window.addEventListener("beforeunload", beforeUnload);
 
+    // Scheduled backups to external destinations.
+    backupManager.onResult = (d, r) => {
+      if (!r.ok) app.toast(`Backup to ${d.name} failed. ${r.message}`, "error");
+      else if (r.trigger === "manual" && r.files) app.toast(`Backed up to ${d.name}`, "success");
+    };
+    backupManager.start({
+      current: () => (app.net.devices.size ? { id: app.projectId, name: app.name, data: JSON.stringify(app.snapshot(), null, 1) } : null),
+      all: async () => {
+        const seen = new Set<string>();
+        const out = [];
+        if (app.net.devices.size) {
+          seen.add(app.projectId);
+          out.push({ id: app.projectId, name: app.name, data: JSON.stringify(app.snapshot(), null, 1) });
+        }
+        for (const b of await backups.list()) {
+          if (seen.has(b.projectId)) continue;
+          seen.add(b.projectId);
+          const data = await backups.load(b.id);
+          if (data) out.push({ id: b.projectId, name: b.name, data });
+        }
+        return out;
+      },
+    });
+
     let unlistenOpen = () => {};
     onDesktopOpenFile((path) => openRecent(path)).then((u) => (unlistenOpen = u));
     return () => {
       unlistenOpen();
+      backupManager.stop();
       cancelAnimationFrame(raf);
       clearInterval(timer);
       window.removeEventListener("beforeunload", beforeUnload);

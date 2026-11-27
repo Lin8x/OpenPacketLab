@@ -168,6 +168,39 @@ const commands = {
     run: (args) => run(`npx vitest run ${args.join(" ")}`),
   },
 
+  it: {
+    args: "[--keep]",
+    desc: "Integration-test backup destinations against S3, WebDAV, SFTP and FTP servers in Docker",
+    run(args) {
+      const cfg = rel("tests/fixtures/s3.json");
+      const servers = [
+        ["opl-it-s3", `-p 8333:8333 -v "${path.dirname(cfg)}:/cfg:ro" chrislusf/seaweedfs server -s3 -s3.config=/cfg/s3.json`],
+        ["opl-it-dav", "-p 8081:80 -e AUTH_TYPE=Basic -e USERNAME=opl -e PASSWORD=oplpass bytemark/webdav"],
+        ["opl-it-sftp", "-p 2222:22 atmoz/sftp opl:oplpass:::upload"],
+        ["opl-it-ftp", '-p 2121:21 -p 21000-21010:21000-21010 -e USERS="opl|oplpass" -e ADDRESS=127.0.0.1 delfer/alpine-ftp-server'],
+      ];
+      step("Starting test servers");
+      for (const [name, opts] of servers) {
+        run(`docker rm -f ${name}`, { stdio: "ignore", allowFail: true });
+        run(`docker run -d --name ${name} ${opts}`);
+      }
+      const stop = () => {
+        if (args.includes("--keep")) return;
+        for (const [name] of servers) run(`docker rm -f ${name}`, { stdio: "ignore", allowFail: true });
+      };
+      try {
+        run("node -e \"setTimeout(()=>{},12000)\""); // let the servers start
+        step("Web providers (S3, WebDAV)");
+        run("npx vitest run tests/backup.integration.test.ts", { env: { ...process.env, OPL_IT: "1" } });
+        step("Native providers (SFTP, FTP)");
+        run("cargo test -- --ignored", { cwd: rel("src-tauri") });
+        console.log(green("\n✓ All backup destinations work"));
+      } finally {
+        stop();
+      }
+    },
+  },
+
   size: {
     desc: "Build and report the web bundle size",
     run() {
