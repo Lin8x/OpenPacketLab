@@ -67,6 +67,28 @@ export async function saveProjectFile(text: string, suggested: string, path: str
   return null;
 }
 
+/** Exports a text file: a save dialog on desktop, a download in the browser. */
+export async function exportText(text: string, filename: string, type = "text/plain") {
+  if (isTauri) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+    const p = await save({ defaultPath: filename });
+    if (p) await writeTextFile(p, text);
+    return;
+  }
+  download(text, filename, type);
+}
+
+/** Desktop only: a project file the app was launched with, and later "open with" requests. */
+export async function onDesktopOpenFile(handler: (path: string) => void): Promise<() => void> {
+  if (!isTauri) return () => {};
+  const { invoke } = await import("@tauri-apps/api/core");
+  const { listen } = await import("@tauri-apps/api/event");
+  const first = await invoke<string | null>("startup_file").catch(() => null);
+  if (first) handler(first);
+  return listen<string>("open-file", (e) => handler(e.payload));
+}
+
 export function download(text: string, filename: string, type = "text/plain") {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const a = document.createElement("a");

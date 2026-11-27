@@ -2,7 +2,7 @@
 
 import { app } from "./state.svelte";
 import { prefs, savePrefs } from "./prefs.svelte";
-import { openProjectFile, saveProjectFile, readPath, isTauri, basename, download } from "./platform";
+import { openProjectFile, saveProjectFile, readPath, isTauri, basename, download, exportText } from "./platform";
 import { SAMPLES } from "./samples";
 import { runningConfig } from "../engine/cli/show";
 import { IosDevice } from "../engine/devices/ios";
@@ -136,7 +136,7 @@ export function exportConfigs() {
   const parts: string[] = [];
   for (const d of app.net.devices.values()) if (d instanceof IosDevice) parts.push(`! ===== ${d.hostname} (${d.model}) =====\n${runningConfig(d)}`);
   if (!parts.length) return app.toast("There are no routers or switches to export.");
-  download(parts.join("\n\n"), `${app.name}-configs.txt`);
+  exportText(parts.join("\n\n"), `${app.name}-configs.txt`);
 }
 
 export function zoom(delta: number) {

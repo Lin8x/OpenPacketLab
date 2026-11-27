@@ -1,0 +1,22 @@
+# OpenPacketLab for Docker Compose and Portainer stacks.
+# Portainer: Stacks > Add stack > Repository, URL https://github.com/Lin8x/OpenPacketLab,
+# compose path docker-compose.yml. Or paste this file into the Web editor.
+services:
+  openpacketlab:
+    image: ghcr.io/lin8x/openpacketlab:latest
+    container_name: openpacketlab
+    restart: unless-stopped
+    ports:
+      - "${OPL_PORT:-8080}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 64M

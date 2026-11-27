@@ -3,7 +3,8 @@
   import { app } from "./state.svelte";
   import { prefs } from "./prefs.svelte";
   import { backups } from "./storage";
-  import { actions, deleteSelection, duplicateSelection, saveProject, openProject, newProject, selectAll, zoom, zoomToFit } from "./actions";
+  import { onDesktopOpenFile } from "./platform";
+  import { actions, deleteSelection, duplicateSelection, saveProject, openProject, openRecent, newProject, selectAll, zoom, zoomToFit } from "./actions";
   import Toolbar from "./components/Toolbar.svelte";
   import Library from "./components/Library.svelte";
   import Canvas from "./components/Canvas.svelte";
@@ -55,7 +56,11 @@
       }
     };
     window.addEventListener("beforeunload", beforeUnload);
+
+    let unlistenOpen = () => {};
+    onDesktopOpenFile((path) => openRecent(path)).then((u) => (unlistenOpen = u));
     return () => {
+      unlistenOpen();
       cancelAnimationFrame(raf);
       clearInterval(timer);
       window.removeEventListener("beforeunload", beforeUnload);

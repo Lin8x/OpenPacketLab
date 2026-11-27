@@ -4,7 +4,7 @@
   import { backups, type BackupMeta } from "../storage";
   import { SAMPLES } from "../samples";
   import { newProject, openProject, loadSample, openRecent } from "../actions";
-  import { isTauri, mod, download, basename } from "../platform";
+  import { isTauri, mod, exportText, basename } from "../platform";
   import Icon from "./Icon.svelte";
 
   const VERSION = __APP_VERSION__;
@@ -32,7 +32,7 @@
 
   async function exportBackup(b: BackupMeta) {
     const data = await backups.load(b.id);
-    if (data) download(data, `${b.name}-${new Date(b.time).toISOString().slice(0, 16).replace(/[:T]/g, "-")}.opl`, "application/json");
+    if (data) exportText(data, `${b.name}-${new Date(b.time).toISOString().slice(0, 16).replace(/[:T]/g, "-")}.opl`, "application/json");
   }
 
   function fmtSize(n: number) {
