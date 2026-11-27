@@ -278,7 +278,7 @@ export class CliSession {
     }
   }
 
-  private dispatch(tokens: string[], neg: boolean, raw: string) {
+  private dispatch(tokens: string[], neg: boolean, raw: string): void {
     const syn = this.candidates(neg);
     let res = match(tokens, syn, false);
     if (!res.full.length && neg) {
