@@ -4,6 +4,7 @@ import { Device, Network, type CableType, type DeviceKind } from "./network";
 import { Host } from "./devices/host";
 import { Hub, Switch } from "./devices/switch";
 import { Router, type RouterModel } from "./devices/router";
+import { installRemoteServer } from "./cli/session";
 
 export const FORMAT = "openpacketlab";
 export const FORMAT_VERSION = 1;
@@ -74,13 +75,17 @@ export const LIBRARY: DeviceTemplate[] = [
 ];
 
 export function createDevice(kind: DeviceKind, id: string, hostname: string, variant?: string): Device {
+  const withVty = <T extends Router | Switch>(d: T): T => {
+    installRemoteServer(d);
+    return d;
+  };
   switch (kind) {
     case "router":
-      return new Router(id, hostname, (variant as RouterModel) ?? "router");
+      return withVty(new Router(id, hostname, (variant as RouterModel) ?? "router"));
     case "switch":
-      return new Switch(id, hostname, false);
+      return withVty(new Switch(id, hostname, false));
     case "l3switch":
-      return new Switch(id, hostname, true);
+      return withVty(new Switch(id, hostname, true));
     case "hub":
       return new Hub(id, hostname);
     default:
