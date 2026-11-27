@@ -116,6 +116,11 @@ npm run dev             # web UI at http://localhost:1420
 npm run app:dev         # desktop app with hot reload
 ```
 
+### Dev scripts
+
+Plain bash scripts live in [`scripts/dev`](scripts/dev): `doctor.sh`, `test.sh`, `check.sh`,
+`build.sh`, `docker.sh`, `backup-it.sh`, `release.sh` and more. See its [README](scripts/dev/README.md).
+
 ### Dev tool
 
 `npm run opl -- <command>` (or `make <command>`) wraps the common tasks:
